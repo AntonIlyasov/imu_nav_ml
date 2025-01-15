@@ -1,0 +1,2 @@
+imu_nav_ml:mavros/libmavconn:mavros/mavros:mavros/mavros_extras:mavros/mavros_msgs:mavros/test_mavros
+-DCATKIN_DEVEL_PREFIX=/home/anton202/study/ml_2_course/new/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/anton202/study/ml_2_course/new/catkin_ws/install -G Unix Makefiles

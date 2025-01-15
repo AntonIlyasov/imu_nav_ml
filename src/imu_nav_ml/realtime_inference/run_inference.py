@@ -183,7 +183,6 @@ def sensors_callback(data, sensor_name):
         counters["mag"] += 1
     
     elif sensor_name == "alt":
-        # altimeter is notorious for sending NaN every now and then
         if np.isnan(data.amsl):
             features["h"] += features["h"]
         else:
@@ -192,7 +191,6 @@ def sensors_callback(data, sensor_name):
         counters["alt"] += 1
     
     elif sensor_name == "ekf_position":
-        # ROS uses ENU frame while px4 ulg uses NED, so switch x & y and negate z
         ekf_position[0] = data.pose.position.y
         ekf_position[1] = data.pose.position.x
         ekf_position[2] = -data.pose.position.z
@@ -202,29 +200,26 @@ def sensors_callback(data, sensor_name):
         ekf_velocity[1] = data.twist.linear.x
         ekf_velocity[2] = -data.twist.linear.z
 
+# основная функция программы
 def sensors_listener():
-    """
-    a rospy node that subscribes to sensor measurements and spins to keep
-    the code running
-    """
     print("initializing sensors_listener node")
 
     rospy.init_node('sensors_listener')
     
-    # subscribe to sensors' topics, a subscriber is initialized by (topic, msg_type, callback_fn)
+    # подписчики на топики датчиков
     _ = rospy.Subscriber('mavros/imu/data', Imu, sensors_callback, "imu", queue_size=100)
     _ = rospy.Subscriber('mavros/imu/mag', MagneticField, sensors_callback, "mag", queue_size=100)
     _ = rospy.Subscriber('mavros/altitude', Altitude, sensors_callback, "alt", queue_size=100)
 
-    # subscribe to window maintainer and nn_predictor
+    # подписчики на window maintainer и nn-предсказатель
     _ = rospy.Subscriber('imu_nav/sensors_ts', Float64, window_maintainer, queue_size=15)
     _ = rospy.Subscriber('imu_nav/features_window', ListOfLists, make_prediction, queue_size=15)
     
-    # subscribe to EKF local position and velocity, used to calculate error
-    # and to align initial states
+    # подписчики для ekf навигации
     _ = rospy.Subscriber('mavros/local_position/pose', PoseStamped, sensors_callback, "ekf_position", queue_size=100)
     _ = rospy.Subscriber('mavros/local_position/velocity_local', TwistStamped, sensors_callback, "ekf_velocity", queue_size=100)
 
+    # ожидаем показания датчиков - входы для рекуррентной сети
     print("you can start publishing mavros sensor messages now")
 
     # call the window maintaner at a fixed rate of 5 Hz
@@ -237,30 +232,21 @@ def sensors_listener():
     rospy.spin()
 
 if __name__=='__main__':
-
-    """
-    Code entry, initialize the features and counters, create a queue to hold the
-    features windw, load the NN keras model, create publishers for the Network
-    inputs and outputs
-    """
     
-    # read script call arguments
+    # номер папки с моделью
     trial_number = sys.argv[1]
-    window_size = int(sys.argv[2])
 
-    # change the working directory to this script's directory
+    # размер окна
+    window_size = int(sys.argv[2])  
+
+    # изменим текущую рабочую директорию
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # This produces a csv file similar to that obtained from a saved ulg file (for comparison)
+    # сохраняем результаты
     SAVE_FEATURES = True
-    # This saves the realtime predictions to compare to the predictions made offline from logs 
     SAVE_PREDICTIONS = True
 
-    # dictionaries "features" & "counters", np arrays "ekf_position" & "ekf_velocity"
-    # and queue "window" are all global variables, and are better replaced by class data
-    # members by rewriting this script as a class
-
-    # initial values for the running sums and counters (used to average sensor data)
+    # начальные условия 
     features = {"w_x" : 0.0, "w_y" : 0.0, "w_z" : 0.0,
                 "a_x" : 0.0, "a_y" : 0.0, "a_z" : 0.0,
                 "m_x" : 0.0, "m_y" : 0.0, "m_z" : 0.0,
@@ -269,42 +255,39 @@ if __name__=='__main__':
     
     counters = {"imu" : 0, "mag" : 0, "alt" : 0}
 
+    # массивы для ekf позиции и скорости
     ekf_position = np.zeros((3,))
     ekf_velocity = np.zeros((3,))
 
-    # create a queue to hold the features vectors as a fixed size window
+    # создаем очередь для хранения векторов признаков в виде окна фиксированного размера
     window = queue.Queue(maxsize=window_size + 2)
 
-    # load the pretrained Tensorflow SavedModel to make predictions
+    # загружаем предварительно обученную сохраненную модель Tensorflow для выполнения прогнозов
     print("loading Tensorflow model ...")
     trial_folder = os.path.join(os.path.pardir, "results", "trial_" + str(trial_number).zfill(3))
     tf_model_path = os.path.join(trial_folder, "tf_saved_model") 
     model = tf.keras.models.load_model(tf_model_path)
 
-    # create a static variable to hold the states, predictions are delta states
-    # and should be accumulated to the states vector
+    # переменная для хранения состояний; предсказания - дельта состояния и должны быть накоплены в векторе состояний
     make_prediction.pos_nn = None
 
-    # a ros parameter to programmatically enable/disable inference
+    # вкл/выкл вывод
     rospy.set_param("/imu_nav/enable_inference", True)
-    # a ros parameter to programmatically reset NN predictions to ekf
+    # сброс прогнозов NN
     rospy.set_param("/imu_nav/reset_nn", False)   
   
-    # a publisher to invoke the window_maintainer callback
+    # паблишеры
     windowing_invoker_pub = rospy.Publisher('imu_nav/sensors_ts', Float64, queue_size=15)
-    # a publisher to invoke the NN inference callback
     features_window_pub = rospy.Publisher('imu_nav/features_window', ListOfLists, queue_size=15)
-    # a publisher to publish the NN predictions
     nn_predictions_pub = rospy.Publisher('imu_nav/nn_predictions', ImuNavPrediction, queue_size=15)
-    # a publisher for the NED EKF states to compare to the NN
     ned_ekf_pub = rospy.Publisher('imu_nav/ned_ekf', PosVel, queue_size=15)
 
-    # create directory to save realtime features, labels, and predictions
+    # создаем директорию для сохранения результатов работы модели: признаков, меток и предсказаний в реальном времени
     realtime_out_folder = os.path.join(trial_folder, "realtime_inference")
     if not os.path.isdir(realtime_out_folder) :
         os.makedirs(realtime_out_folder)
     
-    # files creation timestamp to their names
+    # прикрепляем метку времени создания файлов к их именам
     files_creation_time = "_" + datetime.datetime.now().strftime("%d%b%Y") + \
                           "_" + datetime.datetime.now().strftime("%H%M")
 
@@ -318,5 +301,5 @@ if __name__=='__main__':
         csv_header = "Vn,Ve,Vd,Pn,Pe,Pd\n"
         f.write(csv_header)
 
-    # start the node
+    # стартуем :)
     sensors_listener()
