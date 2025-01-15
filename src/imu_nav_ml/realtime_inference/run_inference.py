@@ -110,12 +110,11 @@ def make_prediction(data):
 
 def window_maintainer(time_float):
 
-
-    # if any sensor haven't sent measurements, return
+    # если никто не отправил новые измерения, выходим
     if counters["imu"] == 0 or counters["mag"] == 0 or counters["alt"] == 0:
         return
 
-    # if this is the first altitude averaging, use zero, or else apply differencing
+    # если это первое усреднение по высоте, используем нулевое значение, иначе дифферинцирование
     if features["h_0"] is None:
         features["h_0"] = features["h"] / counters["alt"]
         altitude_difference = 0.0
@@ -124,12 +123,9 @@ def window_maintainer(time_float):
         altitude_difference = features["h"] - features["h_0"]
         features["h_0"] = features["h"]
         
-
-    # construct a features vector by averaging every sensor measurement
-    # Note that Magnetic field is received in Teslas, but saved in the logs in Gauss (on which the NN was trained),
-    # so it must be multiplied by 10000 to convert it to gauss
-    # also the y & z body axes in mavros are defined in the opposite directions to those saved in logs
-    # so we must negate them (Forward-Left-Up -> Forward-Right-Down)
+    # построим вектор признаков путем усреднения каждого измерения датчика
+    # магнитное поле умножаем на 1000, чтобы преобразовать Теслы в Гауссы 
+    # также учитываем что оси тела в mavros определены в противоположных направлениях, чем те, что сохраняются в журналах
     features_row = [features["w_x"] / counters["imu"],     - features["w_y"] / counters["imu"],     - features["w_z"] / counters["imu"], 
                     features["a_x"] / counters["imu"],     - features["a_y"] / counters["imu"],     - features["a_z"] / counters["imu"], 
                     features["m_x"]/counters["mag"]*10000, - features["m_y"]/counters["mag"]*10000, - features["m_z"]/counters["mag"]*10000, 
@@ -137,18 +133,18 @@ def window_maintainer(time_float):
                     ]
 
     if SAVE_FEATURES:
-        # save the features to compare them to those obtained from the ulg file (for debugging)
+        # сохраняем вектор признаков для дебага
         with open(features_labels_file, 'a') as f:
             csv_writer = csv.writer(f)
             csv_writer.writerow(features_row + list(ekf_velocity) + list(ekf_position))
     
-    # add this features vector to the window queue
+    # добавляем этот вектор признаков в окно
     window.put(features_row)
 
     print("________________________________")
     print("window size: ", window.qsize(), "counters:", counters)
 
-    # reset the counters and the running sums of sensor measurements (start new averaging interval)
+    # запуск нового интервала усреднения
     for key in features.keys():
         if key != "h_0":
             features[key] = 0.0
@@ -156,13 +152,15 @@ def window_maintainer(time_float):
     for key in counters.keys():
         counters[key] = 0
     
-    # if we have enough window to perform one prediction
+    # если у нас достаточно окна для одного предсказания
     if window.qsize() > window_size:
         # remove the oldest time step from the window queue
+        # удаляем самый старый элемент очереди
         window.get()
         # convert the queue to a suitable format for publishing, defined in the msg format
+        # конвертируем очередь в список списков
         window_arr = [PythonList(e) for e in window.queue]
-        # Publish the window as a ListOfLists struct
+        # публикуем окно
         features_window_pub.publish(window_arr)
 
 # добавляем новые измерения датчиков
