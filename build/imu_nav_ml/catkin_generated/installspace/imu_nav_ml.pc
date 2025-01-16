@@ -1,8 +1,0 @@
-prefix=/home/anton202/study/ml_2_course/new/catkin_ws/install
-
-Name: imu_nav_ml
-Description: Description of imu_nav_ml
-Version: 0.0.0
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: message_runtime std_msgs geometry_msgs

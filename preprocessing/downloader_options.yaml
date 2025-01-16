@@ -1,0 +1,28 @@
+db_api_info: https://review.px4.io/dbinfo
+download_api: https://review.px4.io/download
+duration_max_m: 40   # максимально допустимая продолжительность в минутах
+duration_min_m: 5    # минимально допустимая продолжительность в минутах
+filters:
+  flight_modes:      # будет загружен любой журнал, содержащий хотя бы один из этих режимов
+  - Mission
+  - Position
+  - Orbit
+  - Return to Land
+  - Takeoff
+  - Land
+  - Follow Target
+  - Loiter
+  sys_hw:  # будут загружены только журналы с одной из этих версий оборудования
+  - PX4_FMU_V5
+  - PX4FMU_V5
+
+# Максимальное количество журналов для загрузки
+max_num: 10
+
+# перезаписывать существующие журналы?
+overwrite: false
+
+save_db_info_only: false
+
+# используйте информационный файл локальной базы данных, не получая новый
+use_local_db_info: false
