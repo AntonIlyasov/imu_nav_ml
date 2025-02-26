@@ -192,3 +192,18 @@ include_directories(
 #############
 ## Testing ##
 #############
+
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  geometry_msgs
+  nav_msgs
+  imu_nav_ml
+  visualization_msgs
+)
+
+add_executable(imu_nav_ml_node src/imu_nav_ml_node.cpp)
+target_link_libraries(imu_nav_ml_node ${catkin_LIBRARIES})
+
+add_executable(viz_axes src/viz_axes.cpp)
+target_link_libraries(viz_axes ${catkin_LIBRARIES})
