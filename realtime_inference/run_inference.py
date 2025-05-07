@@ -20,10 +20,20 @@ from sensor_msgs.msg import Imu, MagneticField
 from mavros_msgs.msg import Altitude
 from imu_nav_ml.msg import ListOfLists, PythonList, ImuNavPrediction, PosVel
 
-# использует окно признаков для 1 предсказания
+start_time = time.time()
+start_time_window_pub = time.time()
+start_time_imu = time.time()
+start_time_mag = time.time()
+start_time_alt = time.time()
+start_time_ekf_position = time.time()
+start_time_ekf_velocity = time.time()
+
+# использует окно признаков для 1 предсказания (100 samples * 10 features)
 # и публикует лист с предсказанием [Pn, Pe, Pd, Vn, Ve, Vd]
 # публикует и выводит время 1 предсказания
 def make_prediction(data):
+
+    global start_time
 
     if rospy.get_param("/imu_nav/enable_inference"):
 
@@ -47,17 +57,24 @@ def make_prediction(data):
         # время вывода записи
         inference_start_time = timeit.default_timer()
 
+        # print("type(data): ", type(data))
+
         # преобразуем опубликованную структуру ListOfLists в список списков Python (двумерный список)
         window_list = [e.row for e in data.matrix]
+
+        # print("type(window_list): ", type(window_list))
         
         # преобразуем 2D-список в np.array
         window_arr = np.array(window_list, dtype=np.float32)
+        print("!window_arr.size: ", window_arr.size)
         
         # изменим его форму, чтобы он был совместим с сетевым вводом (размер пакета, временные шаги, n_features)
         window_arr = np.resize(window_arr, (1,window_size,10))
+        print("window_arr.shape: ", window_arr.shape)
         
         # предсказываем метки (изменения положения в NED) и аккумулируем их в положении
         delta_position = model.predict(window_arr, batch_size=1).reshape((3,))
+        print("delta_position.shape: ", delta_position.shape)
         make_prediction.pos_nn += delta_position
 
         dt = 0.2
@@ -102,13 +119,25 @@ def make_prediction(data):
         inference_time = timeit.default_timer() - inference_start_time
         one_prediction.inference_time = inference_time
 
-        # публикуем предсказания и EKF
+        print("123 inference_time: ", inference_time)
+
+        # публикуем предсказания и EKF  # 5 Hz
         nn_predictions_pub.publish(one_prediction)
         ned_ekf_pub.publish(ned_ekf)
-        
-        print("\ninference_time : ", inference_time)
 
+        print(f"Время между замерами 666: {1/(time.time() - start_time)} Гц")
+        start_time = time.time()
+        
+        # print("\ninference_time : ", inference_time)
+
+# вызывается с частотой в 5 Гц
 def window_maintainer(time_float):
+
+    global start_time
+    global start_time_window_pub
+
+    # print(f"Время между замерами: {time.time() - start_time:.4f} секунд")
+    # start_time = time.time()
 
     # если никто не отправил новые измерения, выходим
     if counters["imu"] == 0 or counters["mag"] == 0 or counters["alt"] == 0:
@@ -124,8 +153,10 @@ def window_maintainer(time_float):
         features["h_0"] = features["h"]
         
     # построим вектор признаков путем усреднения каждого измерения датчика
-    # магнитное поле умножаем на 1000, чтобы преобразовать Теслы в Гауссы 
-    # также учитываем что оси тела в mavros определены в противоположных направлениях, чем те, что сохраняются в журналах
+    # магнитное поле принимается в теслах, но сохраняется в журналах в гауссах (на которых обучалась NN),
+    # поэтому его нужно умножить на 10000, чтобы преобразовать в гауссы
+    # также оси тела y и z в mavros определены в противоположных направлениях к сохраненным в журналах
+    # поэтому мы должны инвертировать их (вперед-влево-вверх -> вперед-вправо-вниз)
     features_row = [features["w_x"] / counters["imu"],     - features["w_y"] / counters["imu"],     - features["w_z"] / counters["imu"], 
                     features["a_x"] / counters["imu"],     - features["a_y"] / counters["imu"],     - features["a_z"] / counters["imu"], 
                     features["m_x"]/counters["mag"]*10000, - features["m_y"]/counters["mag"]*10000, - features["m_z"]/counters["mag"]*10000, 
@@ -141,8 +172,10 @@ def window_maintainer(time_float):
     # добавляем этот вектор признаков в окно
     window.put(features_row)
 
-    print("________________________________")
-    print("window size: ", window.qsize(), "counters:", counters)
+    # print("________________________________")
+    # print("window size: ", window.qsize(), "counters:", counters)
+
+    # print("before\n", "features:", features, "\ncounters:", counters)
 
     # запуск нового интервала усреднения
     for key in features.keys():
@@ -151,6 +184,8 @@ def window_maintainer(time_float):
 
     for key in counters.keys():
         counters[key] = 0
+
+    # print("features:", features, "\ncounters:", counters)
     
     # если у нас достаточно окна для одного предсказания
     if window.qsize() > window_size:
@@ -161,9 +196,22 @@ def window_maintainer(time_float):
         # публикуем окно
         features_window_pub.publish(window_arr)
 
+        # print("type(window_arr): ", type(window_arr))
+
+        end_time_window_pub = time.time()  # Засекаем конечное время
+        execution_time_window_pub = end_time_window_pub - start_time_window_pub
+        start_time_window_pub = time.time()
+        # print(window.qsize())
+        # print(f"Время между вызовом features_window_pub.publish: {execution_time_window_pub:.4f} секунд")
+
+
+
 # добавляем новые измерения датчиков
 def sensors_callback(data, sensor_name):
-    if sensor_name == "imu":
+
+    global start_time
+
+    if sensor_name == "imu":        # 250 Hz
         features["w_x"] += data.angular_velocity.x
         features["w_y"] += data.angular_velocity.y
         features["w_z"] += data.angular_velocity.z
@@ -171,27 +219,25 @@ def sensors_callback(data, sensor_name):
         features["a_y"] += data.linear_acceleration.y
         features["a_z"] += data.linear_acceleration.z
         counters["imu"] += 1
+        # print("!!!counters:", counters)
     
-    elif sensor_name == "mag":
+    elif sensor_name == "mag":      # 50 Hz
         features["m_x"] += data.magnetic_field.x
         features["m_y"] += data.magnetic_field.y
         features["m_z"] += data.magnetic_field.z
         counters["mag"] += 1
     
-    elif sensor_name == "alt":
-        if np.isnan(data.amsl):
-            features["h"] += features["h"]
-        else:
+    elif sensor_name == "alt":      # 80 Hz
+        if not np.isnan(data.amsl):
             features["h"] += data.amsl
-        
-        counters["alt"] += 1
+            counters["alt"] += 1
     
-    elif sensor_name == "ekf_position":
+    elif sensor_name == "ekf_position":         # 5 Hz
         ekf_position[0] = data.pose.position.y
         ekf_position[1] = data.pose.position.x
         ekf_position[2] = -data.pose.position.z
     
-    elif sensor_name == "ekf_velocity":
+    elif sensor_name == "ekf_velocity":         # 5 Hz
         ekf_velocity[0] = data.twist.linear.y
         ekf_velocity[1] = data.twist.linear.x
         ekf_velocity[2] = -data.twist.linear.z
@@ -230,10 +276,10 @@ def sensors_listener():
 if __name__=='__main__':
     
     # номер папки с моделью
-    trial_number = sys.argv[1]
+    trial_number = sys.argv[1]                      # ./run_inference.py 6 100    // 6 папка trial_006
 
     # размер окна
-    window_size = int(sys.argv[2])  
+    window_size = int(sys.argv[2])                  # 100
 
     # изменим текущую рабочую директорию
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
