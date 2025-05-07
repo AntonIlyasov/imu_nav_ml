@@ -33,6 +33,9 @@ start_time_ekf_velocity = time.time()
 # публикует и выводит время 1 предсказания
 def make_prediction(data):
 
+    # время вывода записи
+    inference_start_time = timeit.default_timer()
+
     global start_time
 
     if rospy.get_param("/imu_nav/enable_inference"):
@@ -54,8 +57,7 @@ def make_prediction(data):
             print("**********************************")
             rospy.set_param("/imu_nav/reset_nn", False)   
 
-        # время вывода записи
-        inference_start_time = timeit.default_timer()
+
 
         # print("type(data): ", type(data))
 
