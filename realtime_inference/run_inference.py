@@ -28,6 +28,34 @@ start_time_alt = time.time()
 start_time_ekf_position = time.time()
 start_time_ekf_velocity = time.time()
 
+UPDATE_RATE = 5
+ekf_position_is_updated = False
+ekf_velocity_is_updated = False
+
+nn_position_error = 0
+nn_velocity_error = 0
+
+def ensure_dir(file_path):
+    """Создает директорию, если она не существует"""
+    directory = os.path.dirname(file_path)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+def write_to_csv(csv_path, data_dict, column_order):
+    """Записывает данные в CSV файл"""
+    # Проверяем, существует ли файл
+    file_exists = os.path.isfile(csv_path)
+    
+    with open(csv_path, 'a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=column_order)
+        
+        # Если файл новый - записываем заголовки
+        if not file_exists:
+            writer.writeheader()
+        
+        # Записываем данные
+        writer.writerow(data_dict)
+
 # использует окно признаков для 1 предсказания (100 samples * 10 features)
 # и публикует лист с предсказанием [Pn, Pe, Pd, Vn, Ve, Vd]
 # публикует и выводит время 1 предсказания
@@ -37,6 +65,10 @@ def make_prediction(data):
     inference_start_time = timeit.default_timer()
 
     global start_time
+    global ekf_position_is_updated
+    global ekf_velocity_is_updated
+    global nn_position_error
+    global nn_velocity_error
 
     if rospy.get_param("/imu_nav/enable_inference"):
 
@@ -79,7 +111,7 @@ def make_prediction(data):
         print("delta_position.shape: ", delta_position.shape)
         make_prediction.pos_nn += delta_position
 
-        dt = 0.2
+        dt = 1 / UPDATE_RATE
         vel_nn = delta_position / dt
 
         if SAVE_PREDICTIONS:
@@ -89,9 +121,17 @@ def make_prediction(data):
                 csv_writer = csv.writer(f)
                 csv_writer.writerow(predictions_row)
 
-        # вычислим ошибки в предсказаниях NN
-        nn_position_error = np.linalg.norm(make_prediction.pos_nn - ekf_position)
-        nn_velocity_error = np.linalg.norm(vel_nn - ekf_velocity)
+        if ekf_position_is_updated:
+            nn_position_error = np.linalg.norm(make_prediction.pos_nn - ekf_position)
+            ekf_position_is_updated = False
+        else:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+        if ekf_velocity_is_updated:
+            nn_velocity_error = np.linalg.norm(vel_nn - ekf_velocity)
+            ekf_velocity_is_updated = False
+        else:
+            print("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG")
 
         # Публикуем положение и скорость NED EKF
         ned_ekf = PosVel()
@@ -129,6 +169,40 @@ def make_prediction(data):
 
         print(f"Время между замерами 666: {1/(time.time() - start_time)} Гц")
         start_time = time.time()
+
+        run_inference_csv = os.path.join("run_inference_results", "trial_" + str(trial_number).zfill(3), "run_inference_result.csv")
+        colum_names = {"top_view" : ["ekf_x", "ekf_y", "ekf_z", "nn_x", "nn_y", "nn_z"],
+                       "velocity" : ["ekf_vx", "ekf_vy", "ekf_vz", "nn_vx", "nn_vy", "nn_vz"],
+                       "errors"   : ["pose_error_3d", "velocity_error_3d"]}
+
+        # Подготовка данных для записи в CSV
+        data_to_log = {
+            'timestamp': datetime.datetime.now().isoformat(),
+            'ekf_x': ekf_position[0],
+            'ekf_y': ekf_position[1],
+            'ekf_z': ekf_position[2],
+            'nn_x': make_prediction.pos_nn[0],
+            'nn_y': make_prediction.pos_nn[1],
+            'nn_z': make_prediction.pos_nn[2],
+            'ekf_vx': ekf_velocity[0],
+            'ekf_vy': ekf_velocity[1],
+            'ekf_vz': ekf_velocity[2],
+            'nn_vx': vel_nn[0],
+            'nn_vy': vel_nn[1],
+            'nn_vz': vel_nn[2],
+            'pose_error_3d': nn_position_error,
+            'velocity_error_3d': nn_velocity_error
+        }
+
+        # Определяем порядок столбцов на основе colum_names
+        column_order = ['timestamp']  # добавляем временную метку
+        for category in colum_names.values():
+            column_order.extend(category)
+
+        # Убеждаемся, что директория существует
+        ensure_dir(run_inference_csv)
+
+        write_to_csv(run_inference_csv, data_to_log, column_order)
         
         # print("\ninference_time : ", inference_time)
 
@@ -174,8 +248,8 @@ def window_maintainer(time_float):
     # добавляем этот вектор признаков в окно
     window.put(features_row)
 
-    # print("________________________________")
-    # print("window size: ", window.qsize(), "counters:", counters)
+    print("________________________________")
+    print("window size: ", window.qsize(), "counters:", counters)
 
     # print("before\n", "features:", features, "\ncounters:", counters)
 
@@ -212,6 +286,8 @@ def window_maintainer(time_float):
 def sensors_callback(data, sensor_name):
 
     global start_time
+    global ekf_position_is_updated
+    global ekf_velocity_is_updated
 
     if sensor_name == "imu":        # 250 Hz
         features["w_x"] += data.angular_velocity.x
@@ -238,11 +314,13 @@ def sensors_callback(data, sensor_name):
         ekf_position[0] = data.pose.position.y
         ekf_position[1] = data.pose.position.x
         ekf_position[2] = -data.pose.position.z
+        ekf_position_is_updated = True
     
     elif sensor_name == "ekf_velocity":         # 5 Hz
         ekf_velocity[0] = data.twist.linear.y
         ekf_velocity[1] = data.twist.linear.x
         ekf_velocity[2] = -data.twist.linear.z
+        ekf_velocity_is_updated = True
 
 # основная функция программы
 def sensors_listener():
@@ -266,8 +344,8 @@ def sensors_listener():
     # ожидаем показания датчиков - входы для рекуррентной сети
     print("you can start publishing mavros sensor messages now")
 
-    # call the window maintaner at a fixed rate of 5 Hz
-    window_maintainer_rate = 5
+    # call the window maintaner at a fixed rate of UPDATE_RATE Hz
+    window_maintainer_rate = UPDATE_RATE
     rate = rospy.Rate(window_maintainer_rate)
     while not rospy.is_shutdown():
         windowing_invoker_pub.publish(time.time())

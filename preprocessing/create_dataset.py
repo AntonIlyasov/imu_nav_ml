@@ -76,37 +76,61 @@ def create_dataset(session_data, colum_names):
                 # считываем данные полета
                 csv_file_name = os.path.join(csvs_directory, flight_file)
                 features = pd.read_csv(csv_file_name, usecols=colum_names["features"]).to_numpy()[1:,:]
+
+                # print("features.shape: ", features.shape)   # (1419, 9)
+
                 features_diff = pd.read_csv(csv_file_name, usecols=colum_names["features_diff"]).to_numpy()
+                # print("features_diff.shape: ", features_diff.shape)     # (1420, 1)
+
+                # print(features_diff[:5])
+
                 labels = pd.read_csv(csv_file_name, usecols=colum_names["labels"]).to_numpy()
-                
-                features_diff = np.diff(features_diff, axis=0)
-                labels = np.diff(labels, axis=0)
+                # print("labels.shape: ", labels.shape)       # (1420, 6)
+
+                features_diff = np.diff(features_diff, axis=0)              # хранит дельты состояния
+                labels = np.diff(labels, axis=0)                            # хранит дельты состояния
+                # print("! features_diff.shape: ", features_diff.shape)
+                # print("! labels.shape: ", labels.shape)
+
+                # print(features_diff[:5])
+
 
                 features = np.hstack((features,features_diff))
+                # print("!!! features.shape: ", features.shape)
                 
                 windowed_features = []
                 windowed_labels = []
+
+                # print("delta = ", labels.shape[0] - session_data["window_size"])
                 
                 # добавляем окно w и метку,признаки в i -> i+w, а метка в i+w
                 for i in range (labels.shape[0] - session_data["window_size"]):
                     
                     one_window = features[i:i+session_data["window_size"], :]
                     one_label = labels[i+session_data["window_size"], :]
+
+                    # print("one_window.shape: ", one_window.shape)
+                    # print("one_label.shape: ", one_label.shape)
                     
                     windowed_features.append(one_window)
                     windowed_labels.append(one_label)
             
-                x_one_flight = np.array(windowed_features)
-                y_one_flight = np.array(windowed_labels)
+                x_one_flight = np.array(windowed_features)              # (n, 10, 10)   (1426, 10, 10)
+                y_one_flight = np.array(windowed_labels)                # (n, 6)        (1426, 6)
+                # print("x_one_flight.shape: ", x_one_flight.shape)
+                # print("y_one_flight.shape: ", y_one_flight.shape)
 
                 flights_dictionaries[set_subdir].update({flight_file[0:-4]:(x_one_flight, y_one_flight)})
                 
                 x_list.append(x_one_flight)
                 y_list.append(y_one_flight)
+            print("len(x_list): ", len(x_list))     # (n_flights, n_samples, 10, 10)
 
             # все окна признаков и меток объединяются в один массив для каждого подкаталога
-            combined_windowed_features[set_subdir] = np.vstack(x_list)
-            combined_windowed_labels[set_subdir] = np.vstack(y_list)
+            combined_windowed_features[set_subdir] = np.vstack(x_list)      # (n_flights*n_samples, 10, 10)
+            combined_windowed_labels[set_subdir] = np.vstack(y_list)        # (n_flights*n_samples, 6)
+            
+            print(combined_windowed_features[set_subdir].shape[0])
 
             # данные перемешиваются, чтобы избежать возможных зависимостей между последовательными окнами
             shuffled_indices = np.arange(combined_windowed_features[set_subdir].shape[0])
@@ -133,14 +157,18 @@ def create_dataset(session_data, colum_names):
                 f.write(line)
         
     # при создании весов уделим внимание меньшим сигналам
+    print("^_^ combined_windowed_labels[\"training\"].shape: ",combined_windowed_labels["training"].shape)
     average_absolutes = np.mean(np.abs(combined_windowed_labels["training"]), axis = 0)
+
+    print("average_absolutes: ", average_absolutes)
+    
     signals_weights = 1 / average_absolutes
-    signals_weights = signals_weights / np.min(signals_weights)
+    signals_weights = signals_weights / np.min(signals_weights) # нормализуем
     print("\nsignals weights:\n", signals_weights, "\n")
 
     for set_subdir in sets_subdirs:
-        print("shape of", set_subdir, "features", combined_windowed_features[set_subdir].shape)
-        print("shape of", set_subdir, "labels", combined_windowed_labels[set_subdir].shape)
+        print("shape of", set_subdir, "features", combined_windowed_features[set_subdir].shape) # (10014, 10, 10)
+        print("shape of", set_subdir, "labels", combined_windowed_labels[set_subdir].shape)     # (10014, 6)
         print("----")
 
         # итоговое время полета

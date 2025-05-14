@@ -18,14 +18,14 @@ def ulg_sensors_broadcaster():
     while not rospy.is_shutdown():
         for message_name, message in messages.items():
             idx = message["iterator"]
-            # print(message_name, idx)
+            print(message_name, idx)
             if idx == message["length"]:
                 print("published all data in the csv files, exiting")
                 exit()
 
             if message_name == "imu":
                 message["timestamp"] = message["timestamps"][idx] 
-                row = message["data"][message["iterator"],:] 
+                row = message["data"][idx,:] 
                 
                 one_msg = Imu()
                 one_msg.angular_velocity.x = row[0]
@@ -41,7 +41,7 @@ def ulg_sensors_broadcaster():
 
             else:
                 sensor_ts = message["timestamps"][idx]
-                
+                    
                 if sensor_ts <= messages["imu"]["timestamp"]:
                     row = message["data"][message["iterator"],:]
                     if message_name == "mag":
@@ -103,14 +103,6 @@ if __name__=='__main__':
         message["length"] = message["data"].shape[0]
 
     messages["imu"]["timestamp"] = 0
-
-    # чтение csv файлов в словарь сообщений
-    for message_name, message in messages.items():
-        file_name = base_name + message["file"] + "_0.csv"
-        message["timestamps"] = pd.read_csv(file_name, usecols=["timestamp"]).to_numpy().squeeze()
-        message["data"] = pd.read_csv(file_name, usecols=message["cols"])[message["cols"]].to_numpy()
-        message["iterator"] = 0
-        message["length"] = message["data"].shape[0]
 
     # imu timestep, используется в трансляции измерений датчиков (иммитация работы в реальном времени)
     imu_dt = messages["imu"]["timestamps"][2] - messages["imu"]["timestamps"][1]
