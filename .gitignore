@@ -3,6 +3,7 @@
 *.temp
 *.csv
 *.ulg
+*.txt
 
 # Игнорируем логи
 logs/
