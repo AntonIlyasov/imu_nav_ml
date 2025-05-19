@@ -4,10 +4,11 @@
 *.csv
 *.ulg
 *.txt
-data/
+data/*
 
 # Игнорируем логи
 logs/
 *.log
 *.hdf5
 *.png
+*.zip
