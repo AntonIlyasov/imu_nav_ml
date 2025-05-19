@@ -12,3 +12,7 @@ logs/
 *.hdf5
 *.png
 *.zip
+data/datasets.zip
+results.zip
+data/ulg_files.zip
+data/flight_csvs.zip
