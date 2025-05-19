@@ -4,6 +4,7 @@
 *.csv
 *.ulg
 *.txt
+data/
 
 # Игнорируем логи
 logs/

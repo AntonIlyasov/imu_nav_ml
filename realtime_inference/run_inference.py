@@ -79,10 +79,14 @@ def make_prediction(data):
             print("*        first prediction        *")
             print("*  ", make_prediction.pos_nn, "  *")
             print("**********************************")    
+
+        if make_prediction.vel_nn is None:
+            make_prediction.vel_nn = np.copy(ekf_velocity)
         
         # если мы хотим сбросить прогнозы nn до ekf (когда GPS восстановился)
         if rospy.get_param("/imu_nav/reset_nn"):   
             make_prediction.pos_nn = np.copy(ekf_position)
+            make_prediction.vel_nn = np.copy(ekf_velocity)
             print("**********************************")       
             print("*        reset predictions       *")
             print("*  ", make_prediction.pos_nn, "  *")
@@ -106,13 +110,17 @@ def make_prediction(data):
         window_arr = np.resize(window_arr, (1,window_size,10))
         print("window_arr.shape: ", window_arr.shape)
         
-        # предсказываем метки (изменения положения в NED) и аккумулируем их в положении
-        delta_position = model.predict(window_arr, batch_size=1).reshape((3,))
+        # предсказываем метки (изменения положения в NED и изменение скоростей) 
+        model_output = model.predict(window_arr, batch_size=1).flatten()
+        delta_velocity = model_output[:3]  # берем первые 3 значения для скорости
+        delta_position = model_output[3:]  # последние 3 значения для положения
+
         print("delta_position.shape: ", delta_position.shape)
         make_prediction.pos_nn += delta_position
 
-        dt = 1 / UPDATE_RATE
-        vel_nn = delta_position / dt
+        make_prediction.vel_nn += delta_velocity
+
+        vel_nn = delta_position * 5
 
         if SAVE_PREDICTIONS:
             # сохраним прогнозы для сравнения    
@@ -387,11 +395,12 @@ if __name__=='__main__':
     # загружаем предварительно обученную сохраненную модель Tensorflow для выполнения прогнозов
     print("loading Tensorflow model ...")
     trial_folder = os.path.join(os.path.pardir, "results", "trial_" + str(trial_number).zfill(3))
-    tf_model_path = os.path.join(trial_folder, "tf_saved_model") 
-    model = tf.keras.models.load_model(tf_model_path)
+    keras_model_path = os.path.join(trial_folder, "keras_model") 
+    model = tf.keras.models.load_model(keras_model_path)
 
     # переменная для хранения состояний; предсказания - дельта состояния и должны быть накоплены в векторе состояний
     make_prediction.pos_nn = None
+    make_prediction.vel_nn = None
 
     # вкл/выкл вывод
     rospy.set_param("/imu_nav/enable_inference", True)

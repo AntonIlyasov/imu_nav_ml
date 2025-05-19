@@ -108,6 +108,18 @@ with PdfPages(all_flights_pdf) as pdf:
         for message in messages.values():
             file_name = base_name + message["file"] + "_0.csv"
             if os.path.isfile(file_name):
+
+                # Сначала прочитать заголовки
+                available_cols = pd.read_csv(file_name, nrows=0).columns.tolist()
+
+                # Проверить, есть ли все нужные столбцы
+                missing_cols = [col for col in message["cols"] if col not in available_cols]
+
+                if missing_cols:
+                    print(f"Пропуск {file_name}: отсутствуют столбцы {missing_cols}")
+                    log_is_corrupted = True
+                    break
+
                 message["timestamps"] = pd.read_csv(file_name, usecols=["timestamp"]).to_numpy().squeeze()
                 message["data"] = pd.read_csv(file_name, usecols=message["cols"])[message["cols"]].to_numpy()
             else:
@@ -137,7 +149,7 @@ with PdfPages(all_flights_pdf) as pdf:
         # combine all the averaged data in one array (11+10) x n
         combined_data = np.concatenate((messages["imu"]["data"], messages["mag"]["data"],
                                         messages["baro"]["data"], messages["ekf"]["data"]), axis=1)
-        header = "w_x,w_y,w_z,a_x,a_y,a_z,m_x,m_y,m_z,h,T,q0,q1,q2,q3,Vn,Ve,Vd,Pn,Pe,Pd"
+        header = "w_x,w_y,w_z,a_x,a_y,a_z,m_x,m_y,m_z,h,T,q0,q1,q2,q3,Vn,Ve,Vd,Pn,Pe,Pd" # 11 12 13 14 ekf - 10
 
         # remove rows that contain nans
         combined_data = combined_data[~np.isnan(combined_data).any(axis=1)]
