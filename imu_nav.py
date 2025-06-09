@@ -30,7 +30,7 @@ model_architecture = [
     ]
 
 # Гиперпараметры сети
-net_hparams = {"trial_number" : 5,                              # номер эксперимента
+net_hparams = {"trial_number" : 7,                              # номер эксперимента
                 "session_mode" : session_mode[mode_id],
                 "gpu_name" : gpu_name[gpu_id],
                 "batch_size" : int(1 * 1024),

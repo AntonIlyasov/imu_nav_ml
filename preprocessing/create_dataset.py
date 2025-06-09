@@ -75,7 +75,7 @@ def create_dataset(session_data, colum_names):
                 
                 # считываем данные полета
                 csv_file_name = os.path.join(csvs_directory, flight_file)
-                features = pd.read_csv(csv_file_name, usecols=colum_names["features"]).to_numpy()[1:,:]
+                features = pd.read_csv(csv_file_name, usecols=colum_names["features"]).to_numpy()[1:,:] # (n, n_features)
 
                 # Пропустить файлы с недостаточным количеством данных
                 if features.shape[0] < session_data["window_size"]:
@@ -84,12 +84,12 @@ def create_dataset(session_data, colum_names):
 
                 # print("features.shape: ", features.shape)   # (1419, 9)
 
-                features_diff = pd.read_csv(csv_file_name, usecols=colum_names["features_diff"]).to_numpy()
+                features_diff = pd.read_csv(csv_file_name, usecols=colum_names["features_diff"]).to_numpy()     # # (n, 1)
                 # print("features_diff.shape: ", features_diff.shape)     # (1420, 1)
 
                 # print(features_diff[:5])
 
-                labels = pd.read_csv(csv_file_name, usecols=colum_names["labels"]).to_numpy()
+                labels = pd.read_csv(csv_file_name, usecols=colum_names["labels"]).to_numpy()       # # (n, n_labels)
                 # print("labels.shape: ", labels.shape)       # (1420, 6)
 
                 features_diff = np.diff(features_diff, axis=0)              # обучаем на дельта состояниях
@@ -100,7 +100,7 @@ def create_dataset(session_data, colum_names):
                 # print(features_diff[:5])
 
 
-                features = np.hstack((features,features_diff))
+                features = np.hstack((features,features_diff))          # (n, n_features)
                 # print("!!! features.shape: ", features.shape)
                 
                 windowed_features = []
@@ -120,8 +120,8 @@ def create_dataset(session_data, colum_names):
                     windowed_features.append(one_window)
                     windowed_labels.append(one_label)
             
-                x_one_flight = np.array(windowed_features)              # (n, 10, 10)   (1426, 10, 10)
-                y_one_flight = np.array(windowed_labels)                # (n, 6)        (1426, 6)
+                x_one_flight = np.array(windowed_features)              # (n_samples, 10, 10)   (1426, 10, 10)
+                y_one_flight = np.array(windowed_labels)                # (n_samples, 6)        (1426, 6)
                 # print("x_one_flight.shape: ", x_one_flight.shape)
                 # print("y_one_flight.shape: ", y_one_flight.shape)
 
