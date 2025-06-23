@@ -12,9 +12,13 @@ filters:
   - Land
   - Follow Target
   - Loiter
+  rating:
+  - Good
+  - Great!
   sys_hw:  # будут загружены только журналы с одной из этих версий оборудования
   - PX4_FMU_V5
   - PX4FMU_V5
+  num_logged_errors: 0
 
 # Максимальное количество журналов для загрузки
 max_num: 10
