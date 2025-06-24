@@ -28,7 +28,7 @@ start_time_alt = time.time()
 start_time_ekf_position = time.time()
 start_time_ekf_velocity = time.time()
 
-UPDATE_RATE = 5
+UPDATE_RATE = 30
 ekf_position_is_updated = False
 ekf_velocity_is_updated = False
 
@@ -214,14 +214,14 @@ def make_prediction(data):
         
         # print("\ninference_time : ", inference_time)
 
-# вызывается с частотой в 5 Гц
+# вызывается с частотой в 30 Гц
 def window_maintainer(time_float):
 
     global start_time
     global start_time_window_pub
 
-    # print(f"Время между замерами: {time.time() - start_time:.4f} секунд")
-    # start_time = time.time()
+    print(f"Время между замерами: {time.time() - start_time:.4f} секунд")
+    start_time = time.time()
 
     # если никто не отправил новые измерения, выходим
     if counters["imu"] == 0 or counters["mag"] == 0 or counters["alt"] == 0:

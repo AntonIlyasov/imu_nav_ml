@@ -140,6 +140,8 @@ def start_training(session_data, model_architecture, train_ds, val_ds, signals_w
     # Пользовательская функция потерь
     # взвешенная средняя абсолютная ошибка
     def weighted_MAE(y_true, y_pred):
+        print("y_true shape:", y_true.shape)
+        print("y_pred shape:", y_pred.shape)
         y_pred = tf.convert_to_tensor(y_pred)
         y_true = math_ops.cast(y_true, y_pred.dtype)
         return K.mean(math_ops.multiply(math_ops.abs(y_pred - y_true), signals_weights_tensor), axis=-1)

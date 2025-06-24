@@ -15,22 +15,27 @@ gpu_name = ["/GPU:0", "/GPU:1", None]
 gpu_id = 0
 create_new_dataset = True 
 
+gpu_devices = tf.config.experimental.list_physical_devices('GPU')
+for device in gpu_devices:
+    tf.config.experimental.set_memory_growth(device, enable = True)
+print("Num GPUs Available: ", len(gpu_devices))
+
 # Архитектура модели нейронной сети с использованием библы TensorFlow и Keras
 # модель состоит из двух LSTM слоев и одного полносвязного слоя
 model_architecture = [
-    tf.keras.layers.LSTM(20, return_sequences=True), #200       Первый LSTM слой (Long Short-Term Memory) с 20 нейронами
+    tf.keras.layers.LSTM(200, return_sequences=False), #200       Первый LSTM слой (Long Short-Term Memory) с 20 нейронами
                                                                 # Этот слой будет обрабатывать последовательные данные.
     tf.keras.layers.Dropout(0.2),
     # tf.keras.layers.LSTM(200, return_sequences=True),         # доп LSTM слой с 200 нейронами
     # tf.keras.layers.LSTM(200, return_sequences=True),         # доп LSTM слой с 200 нейронами
-    tf.keras.layers.LSTM(20, return_sequences=False), #200S     LSTM слой с 20 нейронами
-    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(20, return_sequences=False), #200S     LSTM слой с 20 нейронами
+    # tf.keras.layers.Dropout(0.2),
                                                                 # слой должен возвращать только последний выходной вектор
     tf.keras.layers.Dense(6)                                    # полносвязный слой с 6 нейронами
     ]
 
 # Гиперпараметры сети
-net_hparams = {"trial_number" : 7,                              # номер эксперимента
+net_hparams = {"trial_number" : 1,                              # номер эксперимента
                 "session_mode" : session_mode[mode_id],
                 "gpu_name" : gpu_name[gpu_id],
                 "batch_size" : int(1 * 1024),
@@ -55,7 +60,9 @@ else:
     colum_names = {}
     
 # создаем оконные наборы данных из CSV-файлов полетов (или извлечь старые из двоичных файлов)
-train_ds, val_dataset, train_flights_dict, val_flights_dict, signals_weights = create_dataset(net_hparams, colum_names)
+train_ds, val_dataset, signals_weights = create_dataset(net_hparams, colum_names)
+
+print("!!!!!!!!!!!!!!!!!!!!!!!!!!!ыувсфСуывмяыфысввмыфс!!!!!!!!!!!!!!!!!!!!!!!!!")
 
 # signals_weights - (6,)
 

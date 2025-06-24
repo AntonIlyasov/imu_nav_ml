@@ -1,0 +1,23 @@
+156932522
+
+q0	q1	q2	q3 - 0000_5.02_estimator_status_0 5 герц
+w_x	w_y	w_z	a_x	a_y	a_z	- 0000_5.02_sensor_combined_0 250 герц
+m_x	m_y	m_z - 0000_5.02_vehicle_magnetometer_0 45 герц примерно
+h - 0000_5.02_vehicle_air_data_0 86 герц
+T - 0000_5.02_vehicle_air_data_0 86 герц
+Vn	Ve	Vd	Pn	Pe	Pd - 0000_5.02_vehicle_gps_position_0 
+
+
+
+155109001
+
+156908206
+
+156932201
+
+
+
+156932522-156932201
+
+
+155093640

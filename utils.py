@@ -31,16 +31,22 @@ def create_trial_tree(trial_number, session_mode):
     folders_level_2 = ["differenced", "reconstructed"]
     folders_level_3 = ["best", "worst", "other", "nn_output_csv"]
 
+
     # leaf folders
     for folder_level_1 in folders_level_1:
         for folder_level_2 in folders_level_2:
             for folder_level_3 in folders_level_3:
                 leaf_folder = os.path.join(trial_root_folder, folder_level_1, folder_level_2, folder_level_3)
+                if os.path.exists(leaf_folder):
+                    shutil.rmtree(leaf_folder)
                 os.makedirs(leaf_folder)
 
     if session_mode == "Evaluate":
         return trial_tree
         
+
+    if os.path.exists(weights_folder):
+        shutil.rmtree(weights_folder)
     os.makedirs(weights_folder)
    
     print("\n\n *** \t Created ", trial_root_folder, "\t ***")

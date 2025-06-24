@@ -39,32 +39,29 @@ def create_dataset(session_data, colum_names):
 
         csvs_root_directory = os.path.join(data_directory, "combined_csvs", "trimmed")
         
-        # кол-во всех csv файлов в подпапках
-        n_logs = len([filename for filename in glob.iglob(csvs_root_directory + '/*/*', recursive=True)])
+        # # кол-во всех csv файлов в подпапках
+        # n_logs = len([filename for filename in glob.iglob(csvs_root_directory + '/*/*', recursive=True)])
         session_data["n_features"] = len(colum_names["features"]) + len(colum_names["features_diff"])
-        n_features = str(session_data["n_features"])
-        n_labels = str(len(colum_names["labels"]))
-        # номер полета, кол-во признаков, меток, размер окна и время создания
-        dataset_name = "T" + str(session_data["trial_number"]).zfill(3) + "_logs" + str(n_logs) + \
-                       "_F" + n_features + "L" + n_labels + "_W" + str(session_data["window_size"]) + \
-                       "_" + datetime.datetime.now().strftime("%d%b%Y") + \
-                       "_" + datetime.datetime.now().strftime("%H%M")
+        # n_features = str(session_data["n_features"])
+        # n_labels = str(len(colum_names["labels"]))
+        # # номер полета, кол-во признаков, меток, размер окна и время создания
+        # dataset_name = "T" + str(session_data["trial_number"]).zfill(3) + "_logs" + str(n_logs) + \
+        #                "_F" + n_features + "L" + n_labels + "_W" + str(session_data["window_size"]) + \
+        #                "_" + datetime.datetime.now().strftime("%d%b%Y") + \
+        #                "_" + datetime.datetime.now().strftime("%H%M")
 
-        datasets_directory = os.path.join(data_directory, "datasets", dataset_name)
+        # datasets_directory = os.path.join(data_directory, "datasets", dataset_name)
 
-        if not os.path.isdir(datasets_directory):
-            os.makedirs(datasets_directory)
+        # if not os.path.isdir(datasets_directory):
+        #     os.makedirs(datasets_directory)
         
-        print("creating", dataset_name, "...")
-        session_data["dataset_name"] = dataset_name
+        # print("creating", dataset_name, "...")
+        # session_data["dataset_name"] = dataset_name
 
         # создадим два словаря для обучения и валидации
         combined_windowed_features = {}
         combined_windowed_labels = {}
         
-        # подсловари - пары ключ-значение (flight_name, list of windows)
-        flights_dictionaries = {"training":{}, "validation":{}}
-
         for set_subdir in sets_subdirs:
             csvs_directory = os.path.join(csvs_root_directory, set_subdir)
 
@@ -75,6 +72,7 @@ def create_dataset(session_data, colum_names):
                 
                 # считываем данные полета
                 csv_file_name = os.path.join(csvs_directory, flight_file)
+
                 features = pd.read_csv(csv_file_name, usecols=colum_names["features"]).to_numpy()[1:,:] # (n, n_features)
 
                 # Пропустить файлы с недостаточным количеством данных
@@ -82,7 +80,7 @@ def create_dataset(session_data, colum_names):
                     print(f"Warning: {flight_file} has too few samples ({features.shape[0]}). Skipping.")
                     continue
 
-                # print("features.shape: ", features.shape)   # (1419, 9)
+                print("features.shape: ", features.shape)   # (1419, 9)
 
                 features_diff = pd.read_csv(csv_file_name, usecols=colum_names["features_diff"]).to_numpy()     # # (n, 1)
                 # print("features_diff.shape: ", features_diff.shape)     # (1420, 1)
@@ -125,7 +123,7 @@ def create_dataset(session_data, colum_names):
                 # print("x_one_flight.shape: ", x_one_flight.shape)
                 # print("y_one_flight.shape: ", y_one_flight.shape)
 
-                flights_dictionaries[set_subdir].update({flight_file[0:-4]:(x_one_flight, y_one_flight)})
+                # flights_dictionaries[set_subdir].update({flight_file[0:-4]:(x_one_flight, y_one_flight)})
                 
                 x_list.append(x_one_flight)
                 y_list.append(y_one_flight)
@@ -147,26 +145,27 @@ def create_dataset(session_data, colum_names):
             combined_windowed_features[set_subdir] = combined_windowed_features[set_subdir][shuffled_indices]
             combined_windowed_labels[set_subdir] = combined_windowed_labels[set_subdir][shuffled_indices] 
 
-        # сохраним датасет в файлы (features, labels)
-        with open(os.path.join(datasets_directory, "features_labels"), 'wb') as features_labels_file:
-            np.savez(features_labels_file, \
-                     features_tr=combined_windowed_features["training"], \
-                     labels_tr=combined_windowed_labels["training"], \
-                     features_val=combined_windowed_features["validation"], \
-                     labels_val=combined_windowed_labels["validation"])
+        # # сохраним датасет в файлы (features, labels)
+        # with open(os.path.join(datasets_directory, "features_labels"), 'wb') as features_labels_file:
+        #     np.savez(features_labels_file, \
+        #              features_tr=combined_windowed_features["training"], \
+        #              labels_tr=combined_windowed_labels["training"], \
+        #              features_val=combined_windowed_features["validation"], \
+        #              labels_val=combined_windowed_labels["validation"])
 
-        # словари
-        with open(os.path.join(datasets_directory, "flights_dictionaries"), 'wb') as flights_dict_file:
-            pickle.dump(flights_dictionaries, flights_dict_file,  protocol=pickle.HIGHEST_PROTOCOL)
+        # # словари
+        # with open(os.path.join(datasets_directory, "flights_dictionaries"), 'wb') as flights_dict_file:
+        #     pickle.dump(flights_dictionaries, flights_dict_file,  protocol=pickle.HIGHEST_PROTOCOL)
 
-        # названия столбцов
-        with open(os.path.join(datasets_directory, "features_labels_names.txt"), 'w') as f:
-            for key, value in colum_names.items():
-                line = key + ":\n" + ','.join(map(str, value)) + "\n"
-                f.write(line)
+        # # названия столбцов
+        # with open(os.path.join(datasets_directory, "features_labels_names.txt"), 'w') as f:
+        #     for key, value in colum_names.items():
+        #         line = key + ":\n" + ','.join(map(str, value)) + "\n"
+        #         f.write(line)
         
     # при создании весов уделим внимание меньшим сигналам
     print("^_^ combined_windowed_labels[\"training\"].shape: ",combined_windowed_labels["training"].shape)
+    print("^_^ combined_windowed_labels[\"validation\"].shape: ",combined_windowed_labels["validation"].shape)
     average_absolutes = np.mean(np.abs(combined_windowed_labels["training"]), axis = 0)
 
     print("average_absolutes: ", average_absolutes)
@@ -181,7 +180,7 @@ def create_dataset(session_data, colum_names):
         print("----")
 
         # итоговое время полета
-        dt = 0.2
+        dt = 0.033333333
         flight_time_hr = f'{(combined_windowed_features[set_subdir].shape[0] * dt / 3600):.2f}'
         print("flight time used for", set_subdir, " : ", flight_time_hr, "hours")
         print("------------")
@@ -190,11 +189,15 @@ def create_dataset(session_data, colum_names):
 
         session_data[session_data_new_key] = flight_time_hr
 
+    print("-------------------------------фцвфцв-----------------------------")
+
     # датасет
     training_dataset = tf.data.Dataset.from_tensor_slices((combined_windowed_features["training"], combined_windowed_labels["training"]))
     validation_dataset = tf.data.Dataset.from_tensor_slices((combined_windowed_features["validation"], combined_windowed_labels["validation"]))
 
-    return training_dataset, validation_dataset, flights_dictionaries["training"], flights_dictionaries["validation"], signals_weights
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+    return training_dataset, validation_dataset, signals_weights
 
 if __name__ == '__main__':
     create_dataset()
