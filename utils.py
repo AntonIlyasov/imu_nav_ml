@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os, shutil
 
-def create_trial_tree(trial_number, session_mode):
+def create_trial_tree(trial_number):
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -16,16 +16,6 @@ def create_trial_tree(trial_number, session_mode):
                    "history_csv_file" : history_csv_file
                  }
 
-    if session_mode == "Resume":
-        return trial_tree
-    
-    if session_mode == "Override":
-        shutil.rmtree(trial_root_folder)   
-
-    if session_mode == "Evaluate":
-        shutil.rmtree(os.path.join(trial_root_folder, "training"))
-        shutil.rmtree(os.path.join(trial_root_folder, "validation"))
-     
     # tree levels
     folders_level_1 = ["training", "validation"]
     folders_level_2 = ["differenced", "reconstructed"]
@@ -41,9 +31,6 @@ def create_trial_tree(trial_number, session_mode):
                     shutil.rmtree(leaf_folder)
                 os.makedirs(leaf_folder)
 
-    if session_mode == "Evaluate":
-        return trial_tree
-        
 
     if os.path.exists(weights_folder):
         shutil.rmtree(weights_folder)

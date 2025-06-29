@@ -1,0 +1,470 @@
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 9,                              # номер эксперимента
+                "batch_size" : int(1 * 512),
+                "learning_rate" : 0.005,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+model_architecture = [
+    tf.keras.layers.LSTM(28, return_sequences=True), #200
+    tf.keras.layers.LSTM(112, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(28, return_sequences=False), #200S
+    tf.keras.layers.Dense(3)
+    ]
+    
+    
+///////////////////////////////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(64, return_sequences=True),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.LSTM(128, return_sequences=True),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.LSTM(64, return_sequences=False),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(3)
+]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 10,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+///////////////////////////////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(64, return_sequences=True, kernel_regularizer='l2'),
+    tf.keras.layers.Dropout(0.3),  # Увеличено с 0.2
+    tf.keras.layers.LSTM(128, return_sequences=True, kernel_regularizer='l2'),
+    tf.keras.layers.Dropout(0.3),  # Увеличено с 0.2
+    tf.keras.layers.LSTM(64, return_sequences=False, kernel_regularizer='l2'),
+    tf.keras.layers.Dense(32, activation='relu', kernel_regularizer='l2'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 11,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+///////////////////////////////////////////////////////////////////////
+
+
+model_architecture = [
+    tf.keras.layers.LSTM(64, return_sequences=True),
+    tf.keras.layers.Dropout(0.3),  # Увеличено с 0.2
+    tf.keras.layers.LSTM(128, return_sequences=True),
+    tf.keras.layers.Dropout(0.3),  # Увеличено с 0.2
+    tf.keras.layers.LSTM(64, return_sequences=False),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 12,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+///////////////////////////////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(128, return_sequences=True)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 13,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+                
+///////////////////////////////
+
+# Архитектура модели нейронной сети с использованием библы TensorFlow и Keras
+model_architecture = [
+    tf.keras.layers.LSTM(20, return_sequences=True), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(20, return_sequences=False), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 14,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+////////////////////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(56, return_sequences=True), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(112, return_sequences=False), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 17,                              # номер эксперимента
+                "batch_size" : int(1 * 512),
+                "learning_rate" : 0.002,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+//////////////////////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(112, return_sequences=True), #200
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(224, return_sequences=False), #200S
+    tf.keras.layers.Dense(56, activation='relu'),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 18,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.002,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+//////////////////////////
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z"],
+                "features_diff": ["h", "q0", "q1", "q2", "q3"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+model_architecture = [
+    tf.keras.layers.LSTM(112, return_sequences=True, kernel_regularizer='l2'), #200
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(224, return_sequences=False, kernel_regularizer='l2'), #200S
+    tf.keras.layers.Dense(56, activation='relu', kernel_regularizer='l2'),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 19,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.002,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+                
+////////////////////////////////////////
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z"],
+                "features_diff": ["h", "q0", "q1", "q2", "q3"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+model_architecture = [
+    tf.keras.layers.LSTM(14, return_sequences=True, kernel_regularizer='l2'), #200
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(56, return_sequences=False, kernel_regularizer='l2'), #200S
+    tf.keras.layers.Dense(14, activation='relu', kernel_regularizer='l2'),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 20,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.002,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+/////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(14, return_sequences=True, kernel_regularizer='l2'), #200
+    tf.keras.layers.Dropout(0.5),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(56, return_sequences=False, kernel_regularizer='l2'), #200S
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(14, activation='relu', kernel_regularizer='l2'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 21,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+                
+                
+                
+/////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(14, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(56, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(14, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(6)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 23,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 100,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Vn", "Ve", "Vd", "Pn", "Pe", "Pd"]}
+                
+                
+/////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(14, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(28, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(14, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(6)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 24,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Vn", "Ve", "Vd", "Pn", "Pe", "Pd"]}
+                
+                
+                
+                
+///////////////////////////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(14, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(28, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(14, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 25,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+                
+                
+////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(28, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(56, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(28, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 26,                              # номер эксперимента огонь
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+                
+////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(56, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(112, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(56, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 27,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+                
+                
+/////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(112, return_sequences=True), #200
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(112, return_sequences=False), #200S , kernel_regularizer=regularizers.l2(1e-4)
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(56, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 28,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+                
+                
+///////////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(112, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.LSTM(112, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(112, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S , kernel_regularizer=regularizers.l2(1e-4)
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(56, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 29,                              # номер эксперимента
+                "batch_size" : int(1 * 1024),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+                
+                
+///////////////////////////////
+
+model_architecture = [
+    tf.keras.layers.LSTM(32, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)), #200
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Dropout(0.2),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    # tf.keras.layers.LSTM(200, return_sequences=True),
+    tf.keras.layers.LSTM(64, return_sequences=False, kernel_regularizer=regularizers.l2(1e-4)), #200S
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.Dropout(0.2),
+    tf.keras.layers.Dense(3)
+    ]
+
+# Гиперпараметры сети
+net_hparams = {"trial_number" : 30,                              # номер эксперимента огонь
+                "batch_size" : int(1 * 256),
+                "learning_rate" : 0.001,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
+                }
+
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+                
+////////////////////////////////////
+

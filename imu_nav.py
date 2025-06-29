@@ -1,80 +1,63 @@
 #!/usr/bin/env python3
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Только ошибки
 import tensorflow as tf
 import training
 import utils
 import postprocessing
 from preprocessing.create_dataset import create_dataset
+from tensorflow.keras import regularizers
 
-# Параметры сеанса
-session_mode = ["Fresh", "Resume", "Evaluate", "Override"]
-mode_id = 0
-gpu_name = ["/GPU:0", "/GPU:1", None]
-gpu_id = 0
-create_new_dataset = True 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 0 = все логи, 2 = только ошибки
 
+# вывод доступа видеокарты
 gpu_devices = tf.config.experimental.list_physical_devices('GPU')
 for device in gpu_devices:
     tf.config.experimental.set_memory_growth(device, enable = True)
 print("Num GPUs Available: ", len(gpu_devices))
 
 # Архитектура модели нейронной сети с использованием библы TensorFlow и Keras
-# модель состоит из двух LSTM слоев и одного полносвязного слоя
 model_architecture = [
-    tf.keras.layers.LSTM(200, return_sequences=False), #200       Первый LSTM слой (Long Short-Term Memory) с 20 нейронами
-                                                                # Этот слой будет обрабатывать последовательные данные.
-    tf.keras.layers.Dropout(0.2),
-    # tf.keras.layers.LSTM(200, return_sequences=True),         # доп LSTM слой с 200 нейронами
-    # tf.keras.layers.LSTM(200, return_sequences=True),         # доп LSTM слой с 200 нейронами
-    # tf.keras.layers.LSTM(20, return_sequences=False), #200S     LSTM слой с 20 нейронами
-    # tf.keras.layers.Dropout(0.2),
-                                                                # слой должен возвращать только последний выходной вектор
-    tf.keras.layers.Dense(6)                                    # полносвязный слой с 6 нейронами
-    ]
+    tf.keras.layers.LSTM(64, return_sequences=True, kernel_regularizer=regularizers.l2(1e-4)),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Dropout(0.3),  # Увеличенный dropout
+    tf.keras.layers.LSTM(128, return_sequences=True),  # Добавлен слой
+    tf.keras.layers.LSTM(64, return_sequences=False),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dropout(0.3),
+    tf.keras.layers.Dense(3)
+]
 
 # Гиперпараметры сети
-net_hparams = {"trial_number" : 1,                              # номер эксперимента
-                "session_mode" : session_mode[mode_id],
-                "gpu_name" : gpu_name[gpu_id],
-                "batch_size" : int(1 * 1024),
-                "learning_rate" : 0.001,
-                "window_size" : 100,
-                "epochs" : 1000,
-                "initial_epoch" : 0
+net_hparams = {"trial_number" : 31,                              # номер эксперимента огонь
+                "batch_size" : int(1 * 256),
+                "learning_rate" : 0.0005,
+                "window_size" : 50,
+                "epochs" : 200,
+                "n_features": 14
                 }
 
+colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z", "q0", "q1", "q2", "q3"],
+                "features_diff": ["h"],
+                "labels"       : ["Pn", "Pe", "Pd"]}
+    
+
 # создаем папки для результатов обучения (веса, графики, история потерь)
-trial_tree = utils.create_trial_tree(net_hparams["trial_number"], net_hparams["session_mode"])
+trial_tree = utils.create_trial_tree(net_hparams["trial_number"])
 print(trial_tree)
 
-
-if create_new_dataset:
-    net_hparams["dataset_name"] = None
-    colum_names = {"features"     : ["w_x", "w_y", "w_z", "a_x", "a_y", "a_z", "m_x", "m_y", "m_z"],
-                    "features_diff": ["h"],
-                    "labels"       : ["Vn", "Ve", "Vd", "Pn", "Pe", "Pd"]}
-else:
-    net_hparams["dataset_name"] = "T003_logs0_F10L6_W10_09May2025_2236"
-    colum_names = {}
-    
-# создаем оконные наборы данных из CSV-файлов полетов (или извлечь старые из двоичных файлов)
+# создаем оконные наборы данных из CSV-файлов полетов
 train_ds, val_dataset, signals_weights = create_dataset(net_hparams, colum_names)
 
-print("!!!!!!!!!!!!!!!!!!!!!!!!!!!ыувсфСуывмяыфысввмыфс!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-# signals_weights - (6,)
+# # signals_weights - (6,)
 
 dataset_size = sum(1 for _ in train_ds)
 print("dataset_size: ", dataset_size)
 
 # batch and shuffle
-train_dataset = train_ds.shuffle(buffer_size=1000).batch(net_hparams["batch_size"])
-val_dataset = val_dataset.shuffle(buffer_size=1000).batch(net_hparams["batch_size"])
-
-train_dataset_size = sum(1 for _ in train_dataset)
-print("train_dataset_size: ", type(train_dataset))
+train_dataset = train_ds.shuffle(buffer_size=2048).batch(net_hparams["batch_size"])
+val_dataset = val_dataset.batch(net_hparams["batch_size"])
 
 # преобразуем веса сигналов в тензор, который будет использоваться функцией потерь
 signals_weights_tensor = tf.constant(signals_weights, dtype=tf.float32)
@@ -92,5 +75,4 @@ print("успешное сохранение в формате tf SavedModel")
 # сохраняем модель в формате tf SavedModel
 tf_model_path = trial_tree["trial_root_folder"] + "/tf_saved_model"
 tf.saved_model.save(model, tf_model_path)
-
 print("успешное сохранение в формате tf SavedModel")
