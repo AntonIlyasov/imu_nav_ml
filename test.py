@@ -104,7 +104,7 @@ class Test:
 
     def make_prediction(self, window, window_count, labels_l):
 
-        run_inference_csv = os.path.join("tests", "trial_" + str(trial_number).zfill(3), 
+        run_inference_csv = os.path.join("tests", "trial_" + str(trial_number).zfill(3), flight_file,
                                          "run_inference_result.csv")
         
         colum_names = {"top_view" : ["ekf_x", "ekf_y", "ekf_z", "nn_x", "nn_y", "nn_z"],
